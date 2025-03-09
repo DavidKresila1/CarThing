@@ -6,44 +6,13 @@ BluetoothSerial SerialBT;
 
 #define DEBUG_PORT Serial
 #define ELM_PORT   SerialBT
+char protocol = ISO_15765_11_BIT_500_KBAUD;
 
 ELM327 myELM327;
 #define ELM_PIN "1234"
 #define NAME "CarThing"
 
 uint8_t mac[6] = {0x66, 0x1E, 0x32, 0x30, 0x1B, 0xD0};
-
-void setup()
-{
-  //pinMode(LED_BUILTIN, OUTPUT);
-
-  DEBUG_PORT.begin(115200);
-  ELM_PORT.begin(NAME, true);
-  ELM_PORT.setPin(ELM_PIN);
-
-  DEBUG_PORT.println("Attempting to connect to ELM327...");
-
-  while (!ELM_PORT.connect(mac))
-  {
-    DEBUG_PORT.println("Couldn't connect to OBD scanner");
-    delay(1000);
-  }
-
-  DEBUG_PORT.println("Connected to ELM327");
-  DEBUG_PORT.println("Ensure your serial monitor line ending is set to 'Carriage Return'");
-  DEBUG_PORT.println("Type and send commands/queries to your ELM327 through the serial monitor");
-  DEBUG_PORT.println();
-  //digitalWrite(LED_BUILTIN, HIGH);
-  myELM327.begin(ELM_PORT, true, 2000, 9600);
-  delay(1000);
-
-  if (!myELM327.begin(ELM_PORT, ISO_14230_FAST_INIT))
-  {
-    Serial.println("Couldn't connect to OBD scanner - Phase 2");
-    while (1);
-  }
-  
-}
 
 void printError()
 {
@@ -72,6 +41,41 @@ void printError()
   delay(100);
 }
 
+void setup()
+{
+  //pinMode(LED_BUILTIN, OUTPUT);
+
+  DEBUG_PORT.begin(115200);
+  ELM_PORT.begin(NAME, true);
+  ELM_PORT.setPin(ELM_PIN);
+
+  DEBUG_PORT.println("Attempting to connect to ELM327...");
+
+  while (!ELM_PORT.connect(mac))
+  {
+    DEBUG_PORT.println("Couldn't connect to OBD scanner");
+    delay(1000);
+  }
+
+  DEBUG_PORT.println("Connected to ELM327");
+  DEBUG_PORT.println("Ensure your serial monitor line ending is set to 'Carriage Return'");
+  DEBUG_PORT.println("Type and send commands/queries to your ELM327 through the serial monitor");
+  DEBUG_PORT.println();
+  //digitalWrite(LED_BUILTIN, HIGH);
+  myELM327.begin(ELM_PORT, protocol);
+  delay(1000);
+
+  myELM327.sendCommand(DISP_CURRENT_PROTOCOL);
+  if (myELM327.nb_rx_state == ELM_SUCCESS)
+  {
+    Serial.print("PROTOCOL: ");
+    Serial.println(myELM327.payload);
+  }
+  else
+  {
+    printError();
+  }
+}
 
 float rpm = 0;
 
